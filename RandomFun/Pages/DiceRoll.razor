@@ -1,0 +1,92 @@
+﻿@page "/rollDice"
+@using System.Security.Cryptography
+@using System.Text.RegularExpressions
+@using NCalc
+
+<PageTitle>Dice Roll</PageTitle>
+
+<h1>Dice Roll</h1>
+
+@foreach (var sides in diceBag.Keys)
+{
+    <button class="btn btn-primary" @onclick="@(() => RollDice(sides))">@($"D{sides}")</button>
+    <p role="status">@diceBag[sides]</p>
+}
+
+<label>Custom roll:
+    <input type="text" value="@customRoll" @onchange="OnCustomRollChange" />
+</label>
+
+<button class="btn btn-primary" @onclick="RollCustom">Compute</button>
+<p role="status">@interimRoll</p>
+<p role="status">@result</p>
+
+
+@code {
+    private Dictionary<int, int?> diceBag = new()
+    {
+        { 2, null },
+        { 4, null },
+        { 6, null },
+        { 8, null },
+        { 10, null },
+        { 12, null },
+        { 20, null },
+        { 100, null }
+    };
+
+    private string customRoll = string.Empty;
+    private string interimRoll = string.Empty;
+    private object result = null;
+
+    private void RollDice(int sides)
+    {
+        diceBag[sides] = Roll(sides);
+    }
+
+    private int Roll(int sides) => RandomNumberGenerator.GetInt32(1, sides+1);
+
+    private void OnCustomRollChange(ChangeEventArgs e)
+    {
+        customRoll = e.Value.ToString();
+    }
+    
+    private void RollCustom()
+    {
+        // regular expression that matches zero or more numbers, 'd', and 1 or more numbers. Ex: d20 or 2d6 
+        var regularExpression = @"(\d*)d(\d+)";
+        try
+        {
+            interimRoll = Regex.Replace(
+                customRoll,
+                regularExpression,
+                m => SerializeDiceRolls(EvalSimpleDiceString(m.Value)),
+                RegexOptions.None,
+                TimeSpan.FromMilliseconds(50));
+
+            var expression = new Expression(interimRoll);
+            result = expression.Evaluate();
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            interimRoll = "The match operation timed out.";
+        }
+        catch (EvaluationException ee)
+        {
+            interimRoll = ee.Message;
+        }
+        catch (Exception e)
+        {
+            interimRoll = e.Message;
+        }
+    }
+
+    private int[] EvalSimpleDiceString(string numDNum)
+    {
+        var numsStrings = numDNum.Split('d', 'D');
+        var (count, sides) = (int.TryParse(numsStrings[0], out var a) ? a : 1, int.TryParse(numsStrings[1], out var b) ? b : 1);
+        return Enumerable.Range(1, count).Select(_ => Roll(sides)).ToArray();
+    }
+    
+    private string SerializeDiceRolls(params int[] rolls) => $"({string.Join("+", rolls)})";
+}

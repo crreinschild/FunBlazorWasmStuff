@@ -1,0 +1,102 @@
+﻿@page "/string"
+@using System.Security.Cryptography
+@using System.Reflection.PortableExecutable
+<PageTitle>Random String</PageTitle>
+
+<h1>Random String Generator</h1>
+
+<p>Generate random text. Select the characters to include and the length and click generate.</p>
+
+<p>
+    <label>
+        <input type="checkbox" disabled="@customSet" @bind="includeLowerCase"/>
+        lowercase
+    </label>
+    <label>
+        <input type="checkbox" disabled="@customSet" @bind="includeUpperCase"/>
+        uppercase
+    </label>
+    <label>
+        <input type="checkbox" disabled="@customSet" @bind="includeNumbers"/>
+        numbers
+    </label>
+    <label>
+        <input type="checkbox" disabled="@customSet" @bind="includeSpecial"/>
+        special characters
+    </label>
+    <label>
+        <input type="checkbox" disabled="@customSet" @bind="addSpaces"/>
+        add spaces
+    </label>
+</p>
+
+<div>
+    <label>
+        <input type="checkbox" @onchange="OnCustomSelect"/>
+        Use custom character set (duplicates will be given more weight)
+    </label>
+
+    <div hidden="@(!customSet)">
+        <label>
+            <textarea cols="80" rows="4" value="@customCharacters" @onchange="OnCustomChange"></textarea>
+        </label>
+    </div>
+</div>
+
+<p>
+    <input type="number" min="1" @bind="_length" />
+</p>
+<p>
+    <button class="btn btn-primary" onclick="@Generate">Generate</button>
+</p>
+<p>
+    <textarea cols="80" rows="4" role="status">@_result</textarea>
+</p>
+
+@code {
+    private bool includeLowerCase = true;
+    private bool includeUpperCase = true;
+    private bool includeNumbers = true;
+    private bool includeSpecial = false;
+    private bool addSpaces = false;
+
+    private bool customSet = false;
+    
+    private string lowerCase = "abcdefghijklmnopqrstuvwxyz";
+    private string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private string numbers = "0123456789";
+    private string special = "!@#$%^&*()_+";
+    
+    private string _result = string.Empty;
+    private int _length = 16;
+
+    private string Characters
+        => (includeLowerCase ? lowerCase : "") 
+           + (includeUpperCase ? upperCase : "") 
+           + (includeNumbers ? numbers : "") 
+           + (includeSpecial ? special : "")
+           + (addSpaces ? " " : "");
+
+    private string customCharacters = string.Empty;
+    
+    private void OnCustomSelect(ChangeEventArgs e)
+    {
+        customSet = e?.Value as bool? ?? false;
+        if (string.IsNullOrEmpty(customCharacters))
+        {
+            customCharacters = Characters;
+        }
+    }
+
+    private void OnCustomChange(ChangeEventArgs e)
+    {
+        customCharacters = e?.Value?.ToString() ?? string.Empty;
+    }
+    
+    private void Generate()
+    {
+        var characters = customSet ? customCharacters : Characters;
+        _result = new string(Enumerable.Range(0, _length)
+            .Select(_ => characters[RandomNumberGenerator.GetInt32(0, characters.Length)]).ToArray());
+    }
+}

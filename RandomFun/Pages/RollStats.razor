@@ -1,0 +1,67 @@
+﻿@page "/rollStats"
+@using System.Security.Cryptography
+
+<PageTitle>Roll Stats</PageTitle>
+
+<h1>Roll Stats</h1>
+
+<button class="btn btn-primary" @onclick="@RollAll">Roll All</button>
+<table class="table">
+    <thead>
+        <tr>
+            <th><strong>Total</strong></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th>Lowest</th>
+        </tr>
+    </thead>
+    <tbody>
+    @for (var j = 0; j < stats.GetLength(0); j++)
+    {
+        <tr>
+            @for (var k = 0; k < stats.GetLength(1); k++)
+            {
+                <td>
+                    @if (stats[j, k] == null)
+                    {
+                        <em>?</em>
+                    }
+                    else if (k == 0)
+                    {
+                        <strong>@stats[j, k]</strong>
+                    }
+                    else if (k == 4)
+                    {
+                        <strike>@stats[j, k]</strike>
+                    }
+                    else
+                    {
+                        @stats[j, k]
+                    }
+                </td>
+            }
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private int?[,] stats = new int?[6, 5];
+
+    public void RollAll()
+    {
+        for (var i = 0; i < stats.GetLength(0); i++)
+        {
+            var rolls = Enumerable.Range(0, 4).Select(_ => RollD6()).OrderDescending().ToArray();
+            var total = rolls.Take(3).Sum(); // drop the lowest roll
+            stats[i, 0] = total;
+            for(var j = 0; j < rolls.Length; j++)
+            {
+                stats[i, j+1] = rolls[j];
+            }
+        }
+    }
+        
+    private int RollD6() => RandomNumberGenerator.GetInt32(1, 7);
+}
