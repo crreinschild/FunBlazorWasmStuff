@@ -15,5 +15,5 @@ FROM nginx:alpine AS final
 USER $APP_UID
 WORKDIR /var/www/web
 COPY --from=publish /app/publish/wwwroot .
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY RandomFun/nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
