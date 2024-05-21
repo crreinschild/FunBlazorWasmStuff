@@ -13,6 +13,7 @@
     <p role="status">@diceBag[sides]</p>
 }
 
+
 <label>Custom roll:
     <input type="text" value="@customRoll" @onchange="OnCustomRollChange" />
 </label>
@@ -20,6 +21,7 @@
 <button class="btn btn-primary" @onclick="RollCustom">Compute</button>
 <p role="status">@interimRoll</p>
 <p role="status">@result</p>
+<quote>NOTE: supports math expressions like <code>Floor((Max(d20,d20) + 2d6) / 2)</code></quote>
 
 
 @code {
